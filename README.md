@@ -6,6 +6,7 @@ kafka: 2.12-2.20
 
 ###1. config/zookeeper.properites 配置文件
   - 16 ： dataDir=D:/fafuka/tmp/zookeeper 修改存放地址
+  
 ###2. config/server.properites 配置文件
   - 60 ： log.dirs=D:/kafuka/tmp/kafka-logs  修改存放地址
 
