@@ -2,34 +2,43 @@ package main
 
 import (
 	"fmt"
-	"github.com/hpcloud/tail"
+	"github.com/go-ini/ini"
+	"log_collection/kafka"
+	"log_collection/tail_log"
 	"time"
 )
 
-func main() {
-	fileName := "./my.log"
-	config := tail.Config{
-		ReOpen:    true,                                 // 重新打开
-		Follow:    true,                                 // 跟随
-		Location:  &tail.SeekInfo{Offset: 0, Whence: 2}, // 从文件哪个位置开始读
-		MustExist: false,                                // 文件不存在不报错
-		Poll:      true,                                 //
-	}
-	tails, err := tail.TailFile(fileName, config)
-	if err != nil {
-		fmt.Println("tail open file error,", err)
-		return
-	}
-	var (
-		line *tail.Line
-		ok   bool
-	)
+func run(topic string) {
 	for {
-		line, ok = <-tails.Lines
-		if !ok {
-			fmt.Println("tails.lines read nil ,filename :", fileName)
+		select {
+		case lines := <-tail_log.ReadChan():
+			kafka.SendToKafka(topic, lines.Text)
+		default:
 			time.Sleep(time.Second)
 		}
-		fmt.Println(line.Text)
 	}
+}
+
+func main() {
+	// 1.初始化卡夫卡连接
+	// 2.打开日志文件 准备读入内容
+
+	cfg, err := ini.Load("conf/config.ini")
+	if err != nil {
+		fmt.Println("ini load error:", err)
+		return
+	}
+
+	if err := kafka.Init([]string{cfg.Section("kafka").Key("address").String()}); err != nil {
+		fmt.Println("kafka init error:", err)
+		return
+	}
+
+	if err := tail_log.Init(cfg.Section("taillog").Key("path").String()); err != nil {
+		fmt.Println("tail open file error:", err)
+		return
+	}
+
+	run(cfg.Section("kafka").Key("topic").String())
+
 }

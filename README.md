@@ -12,3 +12,5 @@ kafka: 2.12-2.20
 ###3. 切换至安装路径
   - bin\windows\zookeeper-server-start.bat config\zookeeper.properties  启动zookeeper
   - bin\windows\kafka-server-start.bat config\server.properties 启动卡夫卡
+###4. 卡夫卡终端消费
+  - bin\windows\kafka-console-consumer.bat --bootstrap-server=127.0.0.1:9092 --topic=web_log --from-beginning
